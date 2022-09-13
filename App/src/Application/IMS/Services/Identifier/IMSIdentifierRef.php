@@ -2,6 +2,8 @@
 
 namespace IMSExport\Application\IMS\Services\Identifier;
 
+use IMSExport\Application\Constants\Activities;
+
 class IMSIdentifierRef extends IMSIdentifierBase
 {
 
@@ -10,17 +12,18 @@ class IMSIdentifierRef extends IMSIdentifierBase
     protected int $discussionId = 0;
 
 
-    public function getIdentifier(string $type): string
+    public function getIdentifier(?string $type): string
     {
         switch ($type) {
-            case 'assets':
+            case Activities::exam:
+            case Activities::probe:
                 return $this->createIdentifier('assessment', $this->assessmentId);
-            case 'discussion':
+            case Activities::post:
                 return $this->createIdentifier('discussion_topic', $this->discussionId);
-            case 'web_content':
+            case Activities::task:
+            case Activities::blog:
+            case Activities::wiki:
                 return $this->createIdentifier('web_content', $this->webContentId);
-            case 'lti':
-                return $this->createIdentifier('lti', $this->webContentId);
         }
         return '';
     }

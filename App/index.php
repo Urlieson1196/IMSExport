@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ERROR | E_PARSE);
 
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 
@@ -15,12 +16,14 @@ if (isset($_SERVER['HTTP_ORIGIN'])) {
 // Access-Control headers are received during OPTIONS requests
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 
-    if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
-        // may also be using PUT, PATCH, HEAD etc
+    if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD'])) {
         header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+    }
+    // may also be using PUT, PATCH, HEAD etc
 
-    if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
+    if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
         header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+    }
 
     exit(0);
 }
@@ -31,45 +34,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use IMSExport\Application\Entities\Group;
-use IMSExport\Application\IMS\Exporter\Cartridge;
+use IMSExport\Application\ExportIMS\Handlers\ExportIMS;
 use IMSExport\Core\Router\Teeny;
-use IMSExport\Application\XMLGenerator\Generator;
 
 $app = new Teeny;
 
-$app->action('get', '/xml', function () {
-    $group = new Group(10000);
-    $cartridge = new Cartridge($group);
-    echo '<h1>Curso exportado con éxito!</h1>';
-    $cartridge->export();
+$app->action('post', '/export', function ($params, $body) {
+    $seedId= $body['payload'];
+    $export = new ExportIMS('id', compact('seedId'));
+    $export->run();
 });
 
-$app->action('get', 'xml2', function () {
-
-    $obj = new Generator();
-
-    $obj->createElement('root', ['message' => 'hola mundo'], null, function (Generator $generator) {
-        $generator
-            ->createElement('children1', null, 'Hola mundo 2')
-            ->createElement('children2', null, null, function (Generator $generator) {
-                $generator->createElement('children3', ['attr' => 'hola'], 'texto');
-            });
-    })
-        ->finish();
-
+$app->action('get', '/test', function () {
+    $export = new ExportIMS('id', ['seedId' => '51250023_3_VIRTUAL_1']);
+    $export->run();
 });
-
-/*
- *
- * <root message="hola mundo">
- *  <children1>Hola mundo 2</children1>
- *  <children2>
- *      <children3 attr="hola">texto</children3>
- *  </children2>
- * </root>
- *
- *
- * */
 
 return $app->exec();

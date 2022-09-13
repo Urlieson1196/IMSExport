@@ -2,6 +2,7 @@
 
 namespace IMSExport\Application\IMS\Exporter;
 
+use Exception;
 use IMSExport\Application\Entities\Exam;
 use IMSExport\Application\Entities\Group;
 use IMSExport\Application\IMS\Services\Formats\BaseFormat;
@@ -20,19 +21,19 @@ class QTI extends IMSQTIFormat
     {
 //        find exam
         $this->exam = new Exam($this->data['id']);
-        $this->configurate = $this->exam->find();
+        $this->configurate = $this->exam->toArray();
         $this->section = Collection::createCollection($this->exam->getSection);
         $this->question = Collection::createCollection($this->exam->getQuestion);
         parent::__construct();
     }
 
-    public function export()
+    public function export(): bool
     {
         try {
             $self = $this;
             $this->createQuestestinterop(function () use ($self) {
                 $self
-                    ->createAssessment($this->data['identifierRef'], $this->data['title'], function () use ($self){
+                    ->createAssessment($this->data['identifierRef'], $this->data['title'], function () use ($self) {
                         $self
                             ->qtimetadata($this->configurate['intentos'])
                             ->createInitPresentationMaterial($this->configurate)
@@ -40,9 +41,17 @@ class QTI extends IMSQTIFormat
                     });
             })
             ->finish();
+            return true;
         } catch (Exception $exception) {
             echo $exception->getMessage();
+            return false;
         }
+    }
+
+    public function finish(): BaseFormat
+    {
+        $this->XMLGenerator->finish();
+        return $this;
     }
 
     protected function createAllSection()
@@ -51,7 +60,7 @@ class QTI extends IMSQTIFormat
             ->section
             ->toArray();
         if ($sections && count($sections)) {
-            foreach ($sections as $section) { 
+            foreach ($sections as $section) {
                 $identifier = $this
                     ->identifierCreator
                     ->getIdentifier('section');
@@ -60,11 +69,11 @@ class QTI extends IMSQTIFormat
                 $identifierall = "{$this->data['identifierRef']}_{$identifier}";
 
                 $this->XMLGenerator->createElement(
-                    'section', 
+                    'section',
                     [
-                        'ident'=> $identifierall
-                    ], 
-                    null, 
+                        'ident' => $identifierall
+                    ],
+                    null,
                     function () use ($section, $self, $identifierall) {
                         $self
                             ->qtimetadataSection($section['numero_preguntas'], $section['ponderacion'])
@@ -75,7 +84,8 @@ class QTI extends IMSQTIFormat
         }
     }
 
-    protected function createItemSection($id, $identifierall){
+    protected function createItemSection($id, $identifierall)
+    {
         $questions = $this
             ->question
             ->where('fk_idExamenSeccion', $id)
@@ -85,26 +95,20 @@ class QTI extends IMSQTIFormat
 
         if ($questions && count($questions)) {
             $root = $this;
-            foreach ($questions as $question) { 
-                if($question['tipo']==6 || $question['tipo']==1 || $question['tipo']==5 || $question['tipo']==4 || $question['tipo']==9) {
+            foreach ($questions as $question) {
+                if ($question['tipo'] == 6 || $question['tipo'] == 1 || $question['tipo'] == 5 || $question['tipo'] == 4 || $question['tipo'] == 9) {
 
                     $question = array_merge($question, compact('identifier'));
 
                     $driver = Factory::getDriver(
-                        $question['tipo'], 
-                        $question, 
+                        $question['tipo'],
+                        $question,
                         $root
                     );
                     $driver->export();
                 }
             }
         }
-    }
-
-    public function finish(): BaseFormat
-    {
-        $this->XMLGenerator->finish();
-        return $this;
     }
 
     public function getName(): string
@@ -114,7 +118,7 @@ class QTI extends IMSQTIFormat
 
     public function getFolderName(): string
     {
-        return "{$this->group->groupId}/{$this->data['identifierRef']}";
+        return "{$this->group->seedId}/{$this->data['identifierRef']}";
     }
 
     public function getType(): string

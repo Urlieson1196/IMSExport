@@ -5,8 +5,8 @@ use IMSexport\Application\XMLGenerator\Generator;
 use IMSExport\Application\Entities\Answer;
 use IMSExport\Helpers\Collection;
 
-abstract class BaseQuestion 
-{	
+abstract class BaseQuestion
+{
 	protected Answer $answer;
 	protected Collection $answerCollection;
 
@@ -19,10 +19,10 @@ abstract class BaseQuestion
     protected function createItem($children): self
     {
         $this->root->XMLGenerator->createElement(
-        	'item', 
+        	'item',
         	[
             'ident' => "{$this->data['identifier']}_{$this->data['idPreguntas']}"
-        	], 
+        	],
         	null,
             $children
         );
@@ -37,19 +37,19 @@ abstract class BaseQuestion
             null,
             null,
             function (Generator $generator) use ($text, $textoEnriquecido) {
-            	
+
     			$generator->createElement(
- 					"mattext", 
+ 					"mattext",
                     $textoEnriquecido ? [
                         "texttype" => "TEXT/HTML",
                         "xml:space" => "preserve"
-                    ] : null, 
+                    ] : null,
                     $textoEnriquecido ? "<![CDATA[{$text}]]>" : "{$text}"
                 );
-                     
+
             }
         );
-        
+
         return $this;
     }
 
@@ -60,20 +60,20 @@ abstract class BaseQuestion
             [
                 "ident" => "response_{$this->data['idPreguntas']}",
                 "rcardinality" => $rcardinality
-            ], 
+            ],
             null,
             function (Generator $generator) use ( $children ) {
-            	
+
     			$generator->createElement(
- 					"render_choice", 
-                    null, 
+ 					"render_choice",
+                    null,
                     null,
                     $children
                 );
-                     
+
             }
         );
-        
+
         return $this;
     }
 
@@ -85,7 +85,7 @@ abstract class BaseQuestion
 
         $self = $this;
        	if ($answers && count($answers)) {
-            foreach ($answers as $key=>$value) 
+            foreach ($answers as $key=>$value)
             {
 
             	$ident = "response_{$this->data['idPreguntas']}_{$value['idRespuesta']}";
@@ -96,13 +96,13 @@ abstract class BaseQuestion
 		            'response_label',
 		            [
 		                "ident" => $ident
-		            ], 
+		            ],
 		            null,
 		            function (Generator $generator) use ($response, $textoEnriquecido, $self)
 		            {
-		            	
+
 		            	$self->createMaterial($response, $textoEnriquecido);
-		                  	   
+
 		            }
 		        );
 
@@ -114,12 +114,12 @@ abstract class BaseQuestion
     	$this->root->XMLGenerator->createElement(
             'decvar',
             [
-            	"varname" => $varname, 
-            	"vartype" => $vartype, 
-            	"defaultval" => $defaultval, 
-            	"maxvalue" => $maxvalue, 
+            	"varname" => $varname,
+            	"vartype" => $vartype,
+            	"defaultval" => $defaultval,
+            	"maxvalue" => $maxvalue,
             	"minvalue" => $minvalue
-            ], 
+            ],
             null,
             null
         );
@@ -131,7 +131,7 @@ abstract class BaseQuestion
     {
     	$this->root->XMLGenerator->createElement(
             $tag,
-            null, 
+            null,
             null,
             $children
         );
@@ -145,7 +145,7 @@ abstract class BaseQuestion
             'varequal',
             [
             	"respident" => $respident
-            ], 
+            ],
             $value,
             null
         );
@@ -157,7 +157,7 @@ abstract class BaseQuestion
             'setvar',
             [
             	"action" => $action
-            ], 
+            ],
             $value,
             null
         );
@@ -168,9 +168,9 @@ abstract class BaseQuestion
     	$this->root->XMLGenerator->createElement(
             'setvar',
             [
-            	"feedbacktype" => $feedbacktype, 
+            	"feedbacktype" => $feedbacktype,
             	"linkrefid" => $linkrefid
-            ], 
+            ],
             null,
             null
         );
@@ -182,7 +182,7 @@ abstract class BaseQuestion
             'itemfeedback',
             [
             	"ident" => $ident
-            ], 
+            ],
             null,
             $children
         );
@@ -190,24 +190,24 @@ abstract class BaseQuestion
         return $this;
     }
 
-    protected function response_str($ident, $rcardinality, $maxchars): void 
+    protected function response_str($ident, $rcardinality, $maxchars): void
     {
 
         $this->root->XMLGenerator->createElement(
             'response_str',
             [
-                "ident" => $ident, 
+                "ident" => $ident,
                 "rcardinality" => $rcardinality
-            ], 
+            ],
             null,
             function () use ($maxchars) {
                 $this->root->XMLGenerator->createElement(
                     'render_fib',
                     [
-                        "fibtype" => "String", 
-                        "prompt" => "Dashline", 
+                        "fibtype" => "String",
+                        "prompt" => "Dashline",
                         "maxchars" => $maxchars
-                    ], 
+                    ],
                     null,
                     function () {
                         $this->root->XMLGenerator->createElement('response_label', [

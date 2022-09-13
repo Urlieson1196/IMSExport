@@ -30,7 +30,7 @@ abstract class IMSQTIFormat extends BaseFormat
         return $this;
     }
 
-    protected function qtimetadata(string $attempt): self
+    protected function qtimetadata(?string $attempt): self
     {
         $this->XMLGenerator
             ->createElement(

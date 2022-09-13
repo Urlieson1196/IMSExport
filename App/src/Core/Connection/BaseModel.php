@@ -10,8 +10,8 @@ class BaseModel
     protected MysqlPDO $connection;
     protected $params;
 
-    protected string  $host = '40.76.244.92';
-    protected int $port = 3306;
+    protected string  $host = '10.9.0.9';
+    protected int $port = 13306;
     protected string $db = 'territorio2_0';
     protected string $user = 'territorium';
     protected string $pass = 'T3rr1t0r1um4zur3';

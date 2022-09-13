@@ -4,7 +4,7 @@ namespace IMSExport\Application\IMS\Services\Formats;
 
 interface FormatInterface
 {
-    public function export();
+    public function export(): bool;
 
     public function getName(): string;
 

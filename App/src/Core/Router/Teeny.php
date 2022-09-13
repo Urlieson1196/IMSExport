@@ -17,6 +17,8 @@ class Teeny
     private $code = 200;
     private $pathinfo;
 
+
+
     private $hasParams = false;
     private $paramPatterns = array(
         'alnum' => '[\da-zA-Z]+',
@@ -28,6 +30,11 @@ class Teeny
         'uuid' => '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
         'version' => '\d+\.\d+(\.\d+(-[\da-zA-Z]+(\.[\da-zA-Z]+)*(\+[\da-zA-Z]+(\.[\da-zA-Z]+)*)?)?)?'
     );
+
+    const post = 'POST';
+    const get = 'GET';
+    const put = 'PUT';
+    const delete = 'DELETE';
 
     public function __construct()
     {
@@ -144,6 +151,7 @@ class Teeny
     {
         $code = $this->status();
         $callback = null;
+        $method = null;
 
         if ($code === 200) {
             $path = $this->path();
@@ -172,7 +180,7 @@ class Teeny
         }
 
         if ($code !== 0) {
-            $this->dispatch($callback, $code, null);
+            $this->dispatch($callback, $code, null, $method);
         }
 
         return true;
@@ -246,7 +254,7 @@ class Teeny
                     $callback = null;
                 }
 
-                $this->dispatch($callback, $code, $params);
+                $this->dispatch($callback, $code, $params, $method);
 
                 return 0;
             }
@@ -255,8 +263,19 @@ class Teeny
         return 404;
     }
 
-    private function dispatch($callback, $code, $params)
+    private function dispatch($callback, $code, $params, $method)
     {
+        $body = [];
+        if (in_array($method, [self::post, self::delete, self::put])) {
+            $contentType = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
+            if (strcasecmp($contentType, 'application/json') === 0) {
+                $content = file_get_contents("php://input");
+                $decoded = json_decode($content, true);
+                if (is_array($decoded)) {
+                    $body = $decoded;
+                }
+            }
+        }
         if ($code !== 200) {
             $this->status($code);
 
@@ -267,9 +286,9 @@ class Teeny
         } elseif (is_string($callback) && strpos($callback, '.') !== false) {
             TeenyLoader($this, $callback);
         } elseif ($params !== null) {
-            echo $callback($params);
+            echo $callback($params, $body);
         } else {
-            echo $callback();
+            echo $callback(null, $body);
         }
     }
 

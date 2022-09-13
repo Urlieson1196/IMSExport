@@ -15,47 +15,50 @@ class Cartridge extends Format
 
     public function __construct(public Group $group)
     {
-        $this->resources = Collection::createCollection($this->group->resources);
+        $this->resources = Collection::createCollection($this->group->scaffolding());
         parent::__construct();
     }
 
     public function getFolderName(): string
     {
-        return $this->group->groupId;
+        return $this->group->seedId;
     }
 
     protected function createResources(): self
     {
         foreach ($this->queue as $resource) {
-            $driver = Factory::getDriver($this->group, $resource['typeActivity'], $resource);
-            $driver->export();
-            $href = "{$resource['identifierRef']}/{$driver->getName()}";
-            $this->XMLGenerator->createElement(
-                'resources',
-                null,
-                null,
-                function () use ($resource, $driver, $href) {
-                    $this->XMLGenerator->createElement(
-                        'resource',
-                        [
-                            'identifier' => $resource['identifierRef'],
-                            'type' => $driver->getType()
-                        ],
-                        null,
-                        function (Generator $generator) use ($href) {
-                            $generator->createElement(
-                                'file',
-                                compact('href')
-                            );
-                        }
-                    );
-                }
-            );
+            print_r($resource);
+            $driver = Factory::getDriver($this->group, $resource['resourceType'], $resource);
+            if ($driver) {
+                $driver->export();
+                $href = "{$resource['identifierRef']}/{$driver->getName()}";
+                $this->XMLGenerator->createElement(
+                    'resources',
+                    null,
+                    null,
+                    function () use ($resource, $driver, $href) {
+                        $this->XMLGenerator->createElement(
+                            'resource',
+                            [
+                                'identifier' => $resource['identifierRef'],
+                                'type' => $driver->getType()
+                            ],
+                            null,
+                            function (Generator $generator) use ($href) {
+                                $generator->createElement(
+                                    'file',
+                                    compact('href')
+                                );
+                            }
+                        );
+                    }
+                );
+            }
         }
         return $this;
     }
 
-    public function export(): void
+    public function export(): bool
     {
         try {
             $self = $this;
@@ -67,8 +70,10 @@ class Cartridge extends Format
 
             })
                 ->finish();
+            return true;
         } catch (Exception $exception) {
             echo $exception->getMessage();
+            return false;
         }
     }
 
@@ -104,7 +109,7 @@ class Cartridge extends Format
                     ->getIdentifier('item');
                 $identifierRef = $this
                     ->identifierRefCreator
-                    ->getIdentifier($resource['type']);
+                    ->getIdentifier($resource['resourceType']);
                 $resource = array_merge($resource, compact('identifier', 'identifierRef'));
                 $self = $this;
                 $this->XMLGenerator->createElement(

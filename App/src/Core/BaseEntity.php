@@ -36,6 +36,11 @@ class BaseEntity
         return $this;
     }
 
+    public function getAttribute(string $attribute) : mixed
+    {
+        return $this->data[$attribute];
+    }
+
     public function toArray(): array
     {
         return $this->data;

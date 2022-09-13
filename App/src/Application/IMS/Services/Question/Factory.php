@@ -17,7 +17,6 @@ class Factory
             case QuestionTypes::_opened:
             case QuestionTypes::_file:
                 return new Essay($data, $self);
-            
         }
         return null;
     }
